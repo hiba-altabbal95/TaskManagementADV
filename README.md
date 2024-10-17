@@ -31,7 +31,7 @@ This project is a **Security TASK MANAGEMENT SYSTEM ADVANCED** built with **Lara
 
 1. Clone the repository 
 
-   git clone https://github.com/hiba-altabbal95/Task-Management-system.git
+   git clone https://github.com/hiba-altabbal95/TaskManagementADV
    
 2. navigate to the project directory
   
