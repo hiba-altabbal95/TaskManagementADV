@@ -4,7 +4,7 @@
 ## Description
 This project is a **Security TASK MANAGEMENT SYSTEM ADVANCED** built with **Laravel 10** that provides a **RESTful API** for managing tasks and users.
  It allows admin to create tasks , user  and assign a task to user . In this Project we handle Task Dependency 
- 
+ in this project we add  testing code for methods and testing API for some api in postman 
 
 
 ### Technologies Used:
@@ -31,7 +31,7 @@ This project is a **Security TASK MANAGEMENT SYSTEM ADVANCED** built with **Lara
 
 1. Clone the repository 
 
-   git clone https://github.com/hiba-altabbal95/TaskManagementADV
+   git clone https://github.com/hiba-altabbal95/Task-Management-system.git
    
 2. navigate to the project directory
   
