@@ -10,6 +10,7 @@ use App\Http\Requests\TaskRequest\TaskAttachementRequest;
 use App\Http\Requests\TaskRequest\UpdateTaskRequest;
 use App\Http\Requests\TaskRequest\UpdateTaskStatusRequest;
 use App\Models\Task;
+use App\Models\TaskStatusUpdate;
 use App\Services\ApiResponseService;
 use App\Services\TaskService;
 use Illuminate\Http\JsonResponse;
@@ -206,14 +207,16 @@ class TaskController extends Controller
      * @return JsonResponse
     * 
     */
-    public function updateStatus(UpdateTaskStatusRequest $request,$taskId)
-    {
-        $data=$request->validated();
-        $task = Task::findOrFail($taskId);
-        $this->authorize('update', $task);
-        $task=$this->taskService->updateStatus($data,$task);
+    public function updateStatus(UpdateTaskStatusRequest $request, $taskId)
+     { 
+        $data = $request->validated(); 
+      //  $task = Task::findOrFail($taskId); 
+      
 
-        return ApiResponseService::success($task, 'task status updated  successfully');
-    }
+        $task=$this->taskService->updateStatus($data, $taskId);
+        $this->authorize('updateStatus', $task); 
+        // Use TaskStatusUpdateModel to update the task status 
+    //    $statusUpdate =TaskStatusUpdate::updateStatus($data, $task); 
+        return ApiResponseService::success($task, 'Task status updated successfully'); }
 
 }

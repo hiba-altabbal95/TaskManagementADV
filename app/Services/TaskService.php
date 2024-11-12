@@ -52,45 +52,47 @@ class TaskService{
      * @return \App\Models\Task
      */
     public function createTask(array $data)
-    {
-        try {
+{
+    try {
+        $cacheKey = $this->generateCacheKey($data);
 
-            $cacheKey = $this->generateCacheKey($data);
-            // Create a new Task record with the provided data
-            $task= Task::create([
-                'title'=> $data['title'],
-                'description'=> $data['description'] ?? null,
-                'type'=> $data['type'] ,
-                'status'=> $data['status'],
-                'priority'=> $data['priority'],
-                'date_due'=> $data['date_due'],
-             
-            ]);
+        $task = Task::create([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'type' => $data['type'],
+            'status' => $data['status'] ,
+            'priority' => $data['priority'],
+            'date_due' => $data['date_due'],
+        ]);
 
-            //to forget old cashed when a new task is added
-            Cache::forget($cacheKey);
+      //  Log::info('Task created: ', $task->toArray);
+        // Forget the old cache when a new task is added
+        Cache::forget($cacheKey);
 
-            return $task;
-           // Check for dependencies
-        if ($request->has('dependencies')) {
-            foreach ($request->dependencies as $dependency) {
+       
+
+        // Check for dependencies
+        if (isset($data['dependencies'])) {
+            foreach ($data['dependencies'] as $dependency) {
                 TaskDependency::create([
                     'task_id' => $task->id,
                     'dependent_task_id' => $dependency,
                 ]);
             }
-            $task->setStatus('blocked');
-            $task->save();
+            $task->changeStatus('Blocked');
         } else {
-            $task->setStatus('open');
-            $task->save();
+            $task->changeStatus('Open');
         }
-        } catch (Exception $e) {
-          Log::error('Error creating Task: ' . $e->getMessage());
-          throw new Exception(ApiResponseService::error('Error Creating Task'));
-         
-        }
+       // Log the initial status
+        $task->statusUpdates()->create(['status' => $data['status']]);
+        //Log::info('Task dependencies and initial status logged successfully.');
+        return $task;
+    } catch (Exception $e) {
+        Log::error('Error creating Task: ' . $e->getMessage());
+        throw new Exception('Error Creating Task');
     }
+}
+
 
      /**
      * Get the details of a specific Task by its ID.
@@ -179,22 +181,21 @@ class TaskService{
      */
     public function assignTaskUser(array $data, $id)
     {
-        try{            
-             $task = Task::findOrFail($id);
-             $task->assigned_to=$data['assigned_to'];
-             $task->save();
-
-             //when admin assign task to user ,task status become InProgress.
-             $task->setStatus('InProgress');
-             $task->save();
-
-             return $task;
-        }
-         catch(Exception $e) {
-            Log::error('Error Assigning Task to user' . $e->getMessage());
-            throw new Exception(ApiResponseService::error('Error Assigning Task to user'));
+        try {
+            $task = Task::findOrFail($id);
+            $task->assigned_to = $data['assigned_to'];
+            $task->save();
+    
+            // When admin assigns the task to a user, the task status becomes 'InProgress'
+            $task->changeStatus('InProgress');
+    
+            return $task;
+        } catch (Exception $e) {
+            Log::error('Error Assigning Task to user: ' . $e->getMessage());
+            throw new Exception('Error Assigning Task to user');
         }
     }
+    
 
 
     /**
@@ -243,28 +244,23 @@ class TaskService{
     */
     public function updateStatus(array $data, $id)
     {
-         // Find the task by ID or fail with a 404 error if not found
-         $task = Task::findOrFail($id);
-        try{
-            if($data['status']==='Completed')
-            {
-               $task->markAsCompleted();
+        try {
+            $task = Task::findOrFail($id);
+            if ($data['status'] === 'Completed') {
+                $task->markAsCompleted();
+            } else {
+                $task->changeStatus($data['status']);
             }
-        else{
-               $task->setStatus($data['status']);
-               $task->save();}
-
-        return $task;
-        }
-        catch (ModelNotFoundException $e) {
+            return $task;
+        } catch (ModelNotFoundException $e) {
             Log::error('Task not found: ' . $e->getMessage());
             throw new Exception('Task not found.');
         } catch (Exception $e) {
-            Log::error('Error deleting Task ' . $e->getMessage());
-            throw new Exception(ApiResponseService::error('Error deleting Task'));
+            Log::error('Error updating Task: ' . $e->getMessage());
+            throw new Exception('Error updating Task');
         }
-
     }
+    
 
 
      /**

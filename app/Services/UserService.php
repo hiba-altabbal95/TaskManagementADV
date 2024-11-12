@@ -81,24 +81,30 @@ class UserService
         try {
             // Find the user by ID or fail with a 404 error if not found
             $user = User::findOrFail($id);
-
+    
+            // Hash the password if it's provided
+            if (isset($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
+    
             // Update the user with the provided data, filtering out null values
             $user->update(array_filter([
-                'name'=> $data['name'] ?? $user->name,
-                'email'=> $data['email'] ?? $user->email,
-                'password'=> $data['password'] ?? $user->password,
-                           ]));
-
+                'name' => $data['name'] ?? $user->name,
+                'email' => $data['email'] ?? $user->email,
+                'password' => $data['password'] ?? $user->password,
+            ]));
+    
             // Return the updated user
             return $user;
         } catch (ModelNotFoundException $e) {
             Log::error('User not found: ' . $e->getMessage());
-            throw new Exception('user not found.');
+            throw new Exception('User not found.');
         } catch (Exception $e) {
             Log::error('Error updating user: ' . $e->getMessage());
-            throw new Exception(ApiResponseService::error('Error updating user:'));
+            throw new Exception('Error updating user.');
         }
     }
+    
  /**
      * Delete a specific user by its ID.
      *

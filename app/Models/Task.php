@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\ModelStatus\HasStatuses;
@@ -25,6 +26,23 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
+ 
+
+    /**
+     * Get all status updates for the task.
+     */
+    public function statusUpdates(): HasMany
+    {
+        return $this->hasMany(TaskStatusUpdate::class);
+    }
+
+    /** * Method to change the status of a task and log the update. */
+    public function changeStatus(string $newStatus)
+     {
+         $this->update(['status' => $newStatus]); 
+         $this->statusUpdates()->create(['status' => $newStatus]);
+     }
+
 
      /**
      * Get all of the task's comments.
@@ -49,30 +67,24 @@ class Task extends Model
     {
         return $this->hasMany(TaskDependency::class, 'dependent_task_id');
     }
-    
-    //Method to check if task blocked
-   /* public function isBlocked()
-    {
-        return $this->dependencies()->exists();
-    }
-*/
+   
     /**
      * when this task status become completed 
      * all tast dependent on it will change thier statu from block to open
      */
     public function markAsCompleted()
     {
-        $this->setStatus('Completed');
-
+        $this->changeStatus('Completed');
+    
         // Update status of dependent tasks
         foreach ($this->dependents as $dependency) {
             $dependentTask = $dependency->task;
             if ($dependentTask->status === 'Blocked') {
-                $dependentTask->setStatus('Open');
-                
+                $dependentTask->changeStatus('Open');
             }
         }
     }
+    
 
 
     /**

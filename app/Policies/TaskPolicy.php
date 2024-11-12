@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Task;
 use App\Models\User;
+use PHPOpenSourceSaver\JWTAuth\Contracts\Providers\Auth;
 
 class TaskPolicy
 {
@@ -42,10 +43,18 @@ class TaskPolicy
 
     public function update(User $user, Task $task)
     {
-        $user= $user=User::findorfail(Auth()->user());
-        //user can update status of its task
-        return $user->id === $task->user_id;
+        return $user->hasRole('admin');
     }
+
+    public function updateStatus(User $user, Task $task)
+    {
+        // Get the authenticated user
+        $authUser =Auth()->user();
+    
+        // Ensure that the authenticated user can update the status of the task they are assigned to
+        return $authUser->id === $task->assigned_to;
+    }
+    
 
     public function delete(User $user, Task $task)
     {

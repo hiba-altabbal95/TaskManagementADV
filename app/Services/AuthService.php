@@ -25,17 +25,7 @@ class AuthService
 
     public function login(array $credentials)
     {
-       /** 
-        // Attempt to log in the user with the provided credentials
-        if (!JWTAuth::attempt($credentials)) {
-            abort(400, 'Email & Password do not match our records.');
-        }
-
-        // Retrieve the authenticated user by email
-        $user = User::where('email', $credentials['email'])->first();
-
-        return JWTAuth::fromUser($user);
-     */
+       
       
       $token  = Auth::attempt($credentials);
 
